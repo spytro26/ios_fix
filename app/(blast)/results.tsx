@@ -16,12 +16,16 @@ export default function BlastResultsTab() {
     const results = calculateResults();
 
     const handleSharePDF = async () => {
+        const loadKw = results.totalLoadKw || 0;
+        const loadBtuHr = loadKw * 3412; // kW -> BTU/hr
+
         const pdfData: PDFData = {
             title: 'Blast Freezer Heat Load Summary',
             subtitle: 'Key calculation results for blast freezer refrigeration system',
             finalResults: [
-                { label: 'Total Load (with 20% Safety)', value: ((results.totalLoadKw || 0) * 1.2).toFixed(1), unit: 'kW' },
-                { label: 'Base Load (without safety)', value: (results.totalLoadKw || 0).toFixed(1), unit: 'kW' },
+                { label: 'Total Load (with 20% Safety)', value: (loadKw * 1.2).toFixed(1), unit: 'kW' },
+                { label: 'Base Load (without safety)', value: loadKw.toFixed(1), unit: 'kW' },
+                { label: 'Load', value: loadBtuHr.toFixed(0), unit: 'BTU/hr' },
             ],
             inputs: [
                 {
@@ -163,6 +167,12 @@ export default function BlastResultsTab() {
                             title="Base Load (without safety)"
                             value={results.totalLoadKw}
                             unit="kW"
+                            isHighlighted={true}
+                        />
+                        <ResultCard
+                            title="Load in BTU/hr"
+                            value={(results.totalLoadKw || 0) * 3412}
+                            unit="BTU/hr"
                             isHighlighted={true}
                         />
                     </SectionCard>

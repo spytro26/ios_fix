@@ -250,11 +250,12 @@ const generateHTMLContent = (
   logoStatus: string = 'No Logo',
   isIOS: boolean = false
 ): string => {
+  const isFreezerDoc = (data?.title || '').toLowerCase().includes('freezer');
   // Create main results section if provided - redesigned
   const mainResultsHTML = data.finalResults ? `
     <div class="main-results-section">
       <h2 class="section-title-main">KEY CALCULATION RESULTS</h2>
-      <div class="main-results-grid">
+      <div class="main-results-grid ${data.finalResults.length === 3 ? 'three-cols' : ''}">
         ${data.finalResults.map(item => `
           <div class="main-result-card">
             <div class="main-result-label">${item.label}</div>
@@ -373,11 +374,11 @@ const generateHTMLContent = (
           <h2 class="section-title-main">INPUT PARAMETERS</h2>
           <div class="inputs-two-col">
             <div class="col left">
-              ${[ambient, product].filter(Boolean).map(renderSection).join('')}
+              ${( [ambient, product].filter(Boolean) as NonNullable<PDFData['inputs']>[number][] ).map(renderSection).join('')}
               ${others.filter(s => (s.title || '').toLowerCase().includes('left')).map(renderSection).join('')}
             </div>
             <div class="col right">
-              ${[room, internal].filter(Boolean).map(renderSection).join('')}
+              ${( [room, internal].filter(Boolean) as NonNullable<PDFData['inputs']>[number][] ).map(renderSection).join('')}
               ${others.filter(s => !(s.title || '').toLowerCase().includes('left')).map(renderSection).join('')}
             </div>
           </div>
@@ -408,6 +409,8 @@ const generateHTMLContent = (
       .table-section, .input-section { page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; }
       /* Apply a subtle pre-layout zoom to fit to one page without changing visual spacing */
   .ios-fit { zoom: 0.96; }
+      /* Freezer report tends to be taller; compact it slightly more without affecting others */
+      .ios-fit.ios-fit--freezer { zoom: 0.94; }
       /* Inputs: emulate Android's 2-column layout precisely */
       .input-columns { column-count: initial; column-gap: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; grid-auto-flow: column; }
       /* Place Ambient Conditions & Product Definition on the left column, others on right */
@@ -419,6 +422,13 @@ const generateHTMLContent = (
   .inputs-two-col { display: flex; gap: 12px; align-items: stretch; }
   .inputs-two-col .col { flex: 1 1 0; display: flex; flex-direction: column; gap: 12px; }
   .inputs-two-col .col .table-section { height: auto; }
+      /* Slightly tighter spacing for freezer to avoid 2nd page */
+      .ios-fit.ios-fit--freezer .tables-container { gap: 8px; }
+      .ios-fit.ios-fit--freezer .section-title-main { margin: 0 -5px 8px -5px; padding: 5px 10px; }
+      .ios-fit.ios-fit--freezer .main-results-grid { margin-bottom: 10px; }
+      .ios-fit.ios-fit--freezer .table-header { padding: 5px 8px; }
+      .ios-fit.ios-fit--freezer .data-table { font-size: 6.8px; }
+      .ios-fit.ios-fit--freezer .inputs-two-col .col { gap: 10px; }
   /* Footer: place directly after content with a tiny margin to avoid second page */
   .footer { position: static; bottom: auto; margin-top: 6mm; padding-top: 6px; }
     `
@@ -589,6 +599,11 @@ const generateHTMLContent = (
           gap: 12px;
           margin-bottom: 15px;
         }
+        /* Force 3 columns when exactly three final results are present, with safe right padding */
+        .main-results-grid.three-cols {
+          grid-template-columns: repeat(3, 1fr);
+          padding-right: 8px; /* avoid right-edge clipping on Android/iOS */
+        }
         
         .main-result-card {
           background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -751,7 +766,7 @@ const generateHTMLContent = (
       </style>
     </head>
     <body>
-      ${isIOS ? '<div class="ios-fit">' : ''}
+  ${isIOS ? `<div class="ios-fit ${isFreezerDoc ? 'ios-fit--freezer' : ''}">` : ''}
       <!-- Watermark -->
       ${watermarkBase64 ? `
       <div class="watermark">

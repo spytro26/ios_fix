@@ -22,12 +22,15 @@ export default function ColdRoomResultsTab() {
   const results = calculateHeatLoad(roomData, productData, miscData);
 
   const handleSharePDF = async () => {
+    const loadKw = results.totalLoadKw || 0;
+    const loadBtuHr = loadKw * 3412; // kW -> BTU/hr
     const pdfData: PDFData = {
       title: 'Cold Room Heat Load Summary',
       subtitle: 'Key calculation results for cold room refrigeration system',
       finalResults: [
-        { label: 'Total Load (with 20% Safety)', value: ((results.totalLoadKw || 0) * 1.2).toFixed(1), unit: 'kW' },
-        { label: 'Base Load (without safety)', value: results.totalLoadKw?.toFixed(1) || '0.0', unit: 'kW' },
+        { label: 'Total Load (with 20% Safety)', value: (loadKw * 1.2).toFixed(1), unit: 'kW' },
+        { label: 'Base Load (without safety)', value: loadKw.toFixed(1), unit: 'kW' },
+        { label: 'Load', value: loadBtuHr.toFixed(0), unit: 'BTU/hr' },
       ],
       inputs: [
         {
@@ -168,6 +171,12 @@ export default function ColdRoomResultsTab() {
               title="Base Load (without safety)"
               value={results.totalLoadKw}
               unit="kW"
+              isHighlighted={true}
+            />
+            <ResultCard
+              title="Load in BTU/hr"
+              value={(results.totalLoadKw || 0) * 3412}
+              unit="BTU/hr"
               isHighlighted={true}
             />
           </SectionCard>
