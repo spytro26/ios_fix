@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
+import "firebase/compat/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -12,6 +13,15 @@ export const firebaseConfig = {
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+// Initialize compat app if needed for third-party libraries
+if (typeof window !== 'undefined' && !window.firebase?.apps?.length) {
+  import('firebase/compat/app').then((firebase) => {
+    if (!firebase.default.apps.length) {
+      firebase.default.initializeApp(firebaseConfig);
+    }
+  });
+}
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
